@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Select EAD</title>
+    <title>Select EAD - Plataforma de Ensino</title>
+    
+    <!-- 1. Tailwind CSS (Design) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -14,45 +16,693 @@
               surface: '#1e293b',    // Slate 800
               primary: '#4f46e5',    // Indigo 600
               primaryHover: '#4338ca', // Indigo 700
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
             }
           }
         }
       }
     </script>
+
+    <!-- 2. Fontes e Estilos Globais -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       body {
         background-color: #0f172a;
         color: #f1f5f9;
+        font-family: 'Inter', sans-serif;
       }
-      /* Custom scrollbar for dark theme */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #0f172a; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #334155; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #475569; 
-      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #0f172a; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
+      
+      .animate-in { animation: fadeIn 0.3s ease-out; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-  <script type="importmap">
+
+    <!-- 3. React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 4. Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+<script type="importmap">
 {
   "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+    "react": "https://aistudiocdn.com/react@^19.2.0"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
-  <body>
+<body>
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      // --- ÍCONES ---
+      const IconWrapper = ({ name, size = 20, className = "", ...props }) => {
+        const iconRef = useRef(null);
+        useEffect(() => {
+          if (window.lucide) {
+            window.lucide.createIcons({
+              root: iconRef.current,
+              nameAttr: 'data-lucide',
+              attrs: { class: `lucide lucide-${name} ${className}`, width: size, height: size, ...props }
+            });
+          }
+        }, [name, size, className]);
+        return <i ref={iconRef} data-lucide={name} className={className}></i>;
+      };
+
+      // Componentes de Ícone
+      const User = (p) => <IconWrapper name="user" {...p} />;
+      const Lock = (p) => <IconWrapper name="lock" {...p} />;
+      const LogOut = (p) => <IconWrapper name="log-out" {...p} />;
+      const BookOpen = (p) => <IconWrapper name="book-open" {...p} />;
+      const Search = (p) => <IconWrapper name="search" {...p} />;
+      const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
+      const MonitorPlay = (p) => <IconWrapper name="monitor-play" {...p} />;
+      const ChevronLeft = (p) => <IconWrapper name="chevron-left" {...p} />;
+      const CheckCircle = (p) => <IconWrapper name="check-circle" {...p} />;
+      const XCircle = (p) => <IconWrapper name="x-circle" {...p} />;
+      const Download = (p) => <IconWrapper name="download" {...p} />;
+      const Upload = (p) => <IconWrapper name="upload" {...p} />;
+      const X = (p) => <IconWrapper name="x" {...p} />;
+      const Plus = (p) => <IconWrapper name="plus" {...p} />;
+      const Trash2 = (p) => <IconWrapper name="trash-2" {...p} />;
+      const Video = (p) => <IconWrapper name="video" {...p} />;
+      const FileText = (p) => <IconWrapper name="file-text" {...p} />;
+      const ImageIcon = (p) => <IconWrapper name="image" {...p} />;
+
+      // --- BANCO DE DADOS (LOCALSTORAGE) ---
+      const STORAGE_KEY = 'evp_platform_data';
+      const CONFIG_KEY = 'evp_site_config';
+
+      const SEED_DATA = [
+        {
+          id: 'c1',
+          title: 'Excel 2021 – Formação Básica',
+          description: 'Aprenda a usar o Excel de forma prática: criação de planilhas, fórmulas simples, gráficos e organização de dados para o dia a dia.',
+          coverImage: null,
+          pdfUrl: null,
+          lessons: [
+            { id: 'l1', module: 'Módulo 1 - Introdução', title: 'Para que usar o Excel?', description: '', videoUrl: '', status: 'pending' },
+            { id: 'l2', module: 'Módulo 1 - Introdução', title: '02 - Utilizar o menu Barra de Ferramentas', description: '', videoUrl: '', status: 'pending' },
+          ],
+          exercises: []
+        }
+      ];
+
+      const DEFAULT_CONFIG = {
+        heroImage: 'https://cdn-icons-png.flaticon.com/512/3069/3069172.png',
+        defaultCourseImage: null
+      };
+
+      const getCourses = () => {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_DATA));
+          return SEED_DATA;
+        }
+        return JSON.parse(data);
+      };
+
+      const saveCourse = (updatedCourse) => {
+        const courses = getCourses();
+        const index = courses.findIndex(c => c.id === updatedCourse.id);
+        if (index >= 0) courses[index] = updatedCourse;
+        else courses.push(updatedCourse);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
+      };
+
+      const deleteCourse = (courseId) => {
+        const courses = getCourses();
+        const filtered = courses.filter(c => c.id !== courseId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+      };
+
+      const getSiteConfig = () => {
+        const data = localStorage.getItem(CONFIG_KEY);
+        if (!data) return DEFAULT_CONFIG;
+        return JSON.parse(data);
+      };
+
+      const saveSiteConfig = (config) => {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      };
+
+      const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      };
+
+      // --- COMPONENTES UI ---
+      const Button = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
+        const variants = {
+          primary: "bg-primary hover:bg-primaryHover text-white shadow-lg shadow-indigo-500/30",
+          secondary: "bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600",
+          danger: "bg-red-600 hover:bg-red-700 text-white",
+          ghost: "bg-transparent hover:bg-slate-800 text-slate-400 hover:text-white"
+        };
+        const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-5 py-2.5 text-sm", lg: "px-8 py-3 text-base" };
+        return (
+          <button className={`rounded-full font-medium transition-all flex items-center justify-center gap-2 ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
+            {children}
+          </button>
+        );
+      };
+
+      const Input = ({ label, className = '', ...props }) => (
+        <div className="w-full">
+          {label && <label className="block text-sm font-medium text-slate-400 mb-1">{label}</label>}
+          <input className={`w-full bg-slate-950/50 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${className}`} {...props} />
+        </div>
+      );
+
+      const TextArea = ({ label, className = '', ...props }) => (
+        <div className="w-full">
+          {label && <label className="block text-sm font-medium text-slate-400 mb-1">{label}</label>}
+          <textarea className={`w-full bg-slate-950/50 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors ${className}`} {...props} />
+        </div>
+      );
+
+      // --- MODAL: CONFIGURAÇÃO DO SITE ---
+      const SiteConfigEditor = ({ config: initialConfig, onClose, onSave }) => {
+        const [config, setConfig] = useState(initialConfig);
+        const heroInputRef = useRef(null);
+        const courseInputRef = useRef(null);
+
+        const handleUpload = async (e, field) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const base64 = await fileToBase64(file);
+            setConfig({ ...config, [field]: base64 });
+          }
+        };
+
+        const handleSave = () => {
+          saveSiteConfig(config);
+          onSave();
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in">
+            <div className="bg-surface w-full max-w-lg rounded-2xl border border-slate-700 shadow-2xl flex flex-col">
+              <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-900/50 rounded-t-2xl">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2"><ImageIcon className="text-primary" /> Imagens do Site</h2>
+                <button onClick={onClose} className="text-slate-400 hover:text-white"><X /></button>
+              </div>
+              <div className="p-6 space-y-8">
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-slate-300">Mascote (Home)</label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 h-24 bg-slate-800 rounded-lg border border-slate-600 flex items-center justify-center overflow-hidden shrink-0">
+                      {config.heroImage ? <img src={config.heroImage} className="w-full h-full object-contain" /> : <ImageIcon className="text-slate-500" />}
+                    </div>
+                    <div>
+                      <input type="file" ref={heroInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'heroImage')} />
+                      <Button variant="secondary" size="sm" onClick={() => heroInputRef.current?.click()}><Upload size={14} /> Alterar</Button>
+                    </div>
+                  </div>
+                </div>
+                <hr className="border-slate-700" />
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-slate-300">Capa Padrão (Cursos)</label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 h-24 bg-slate-800 rounded-lg border border-slate-600 flex items-center justify-center overflow-hidden shrink-0">
+                      {config.defaultCourseImage ? <img src={config.defaultCourseImage} className="w-full h-full object-cover" /> : <span className="text-xs text-slate-500">Padrão</span>}
+                    </div>
+                    <div>
+                      <input type="file" ref={courseInputRef} className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'defaultCourseImage')} />
+                      <Button variant="secondary" size="sm" onClick={() => courseInputRef.current?.click()}><Upload size={14} /> Alterar</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 border-t border-slate-700 bg-slate-900/50 flex justify-end gap-2 rounded-b-2xl">
+                <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+                <Button onClick={handleSave}>Salvar</Button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- MODAL: EDITOR DE CURSO ---
+      const CourseEditor = ({ course: initialCourse, onClose, onSave }) => {
+        const [course, setCourse] = useState(initialCourse || {
+          id: crypto.randomUUID(), title: '', description: '', coverImage: null, pdfUrl: null, lessons: [], exercises: []
+        });
+        const [editingExerciseLessonId, setEditingExerciseLessonId] = useState(null);
+        const imageInputRef = useRef(null);
+        const pdfInputRef = useRef(null);
+
+        const handleImageUpload = async (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const base64 = await fileToBase64(file);
+            setCourse({ ...course, coverImage: base64 });
+          }
+        };
+
+        const handlePdfUpload = (e) => {
+          const file = e.target.files?.[0];
+          if (file) setCourse({ ...course, pdfUrl: file.name });
+        };
+
+        const addLesson = () => {
+          setCourse({ ...course, lessons: [...course.lessons, { id: crypto.randomUUID(), title: 'Nova Aula', description: '', videoUrl: '', status: 'pending', module: '' }] });
+        };
+
+        const updateLesson = (id, field, value) => {
+          setCourse({ ...course, lessons: course.lessons.map(l => l.id === id ? { ...l, [field]: value } : l) });
+        };
+
+        const handleVideoFileSelect = (e, lessonId) => {
+          const file = e.target.files?.[0];
+          if (file) updateLesson(lessonId, 'videoUrl', URL.createObjectURL(file));
+        };
+
+        const deleteLesson = (id) => {
+          setCourse({ ...course, lessons: course.lessons.filter(l => l.id !== id) });
+        };
+
+        const handleSave = () => {
+          if (!course.title) return alert('Nome do curso obrigatório.');
+          saveCourse(course);
+          onSave();
+        };
+
+        // Modal de Exercícios Interno
+        const renderExerciseModal = () => {
+          if (!editingExerciseLessonId) return null;
+          const lesson = course.lessons.find(l => l.id === editingExerciseLessonId);
+          const lessonExercises = course.exercises.filter(e => e.lessonId === editingExerciseLessonId);
+
+          const addExercise = () => {
+            const newEx = { id: crypto.randomUUID(), lessonId: editingExerciseLessonId, statement: '', optionA: '', optionB: '', optionC: '', optionD: '', correctOption: 'A' };
+            setCourse({ ...course, exercises: [...course.exercises, newEx] });
+          };
+
+          const updateExercise = (id, field, value) => {
+            setCourse({ ...course, exercises: course.exercises.map(e => e.id === id ? { ...e, [field]: value } : e) });
+          };
+
+          const removeExercise = (id) => {
+            setCourse({ ...course, exercises: course.exercises.filter(e => e.id !== id) });
+          };
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 overflow-y-auto">
+              <div className="bg-surface w-full max-w-4xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-900">
+                  <h3 className="text-xl font-bold text-white">Exercícios: <span className="text-primary">{lesson.title}</span></h3>
+                  <div className="flex gap-2">
+                    <Button onClick={addExercise} size="sm">Adicionar Questão</Button>
+                    <button onClick={() => setEditingExerciseLessonId(null)} className="ml-4 text-slate-400 hover:text-white"><X /></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-background">
+                  {lessonExercises.length === 0 && <p className="text-center text-slate-500 py-10">Nenhum exercício cadastrado.</p>}
+                  {lessonExercises.map((ex, idx) => (
+                    <div key={ex.id} className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+                      <div className="flex justify-between mb-4"><span className="text-slate-400 text-sm">Questão {idx + 1}</span><button onClick={() => removeExercise(ex.id)} className="text-red-500 text-xs"><Trash2 size={14} /></button></div>
+                      <TextArea value={ex.statement} onChange={(e) => updateExercise(ex.id, 'statement', e.target.value)} placeholder="Enunciado" className="mb-4" />
+                      <div className="grid grid-cols-2 gap-4">
+                        {['A', 'B', 'C', 'D'].map(opt => (
+                          <div key={opt} className="space-y-1">
+                            <input type="text" value={ex[`option${opt}`]} onChange={(e) => updateExercise(ex.id, `option${opt}`, e.target.value)} className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white" placeholder={`Alternativa ${opt}`} />
+                            <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name={`correct-${ex.id}`} checked={ex.correctOption === opt} onChange={() => updateExercise(ex.id, 'correctOption', opt)} /> <span className="text-xs text-slate-400">Correta</span></label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="p-4 border-t border-slate-700 bg-slate-900 flex justify-end"><Button onClick={() => setEditingExerciseLessonId(null)}>Concluir</Button></div>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in">
+            {renderExerciseModal()}
+            <div className="bg-surface w-full max-w-4xl rounded-2xl border border-slate-700 shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-900/50 rounded-t-2xl">
+                <h2 className="text-2xl font-bold text-white">{initialCourse ? 'Editar Curso' : 'Novo Curso'}</h2>
+                <button onClick={onClose} className="text-slate-400 hover:text-white"><X /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    {course.coverImage && <img src={course.coverImage} className="h-20 w-32 rounded object-cover border border-slate-700" />}
+                    <div>
+                      <input type="file" ref={imageInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                      <Button variant="secondary" size="sm" onClick={() => imageInputRef.current?.click()}>Imagem Capa</Button>
+                    </div>
+                  </div>
+                  <Input label="Nome do Curso" value={course.title} onChange={(e) => setCourse({ ...course, title: e.target.value })} />
+                  <TextArea label="Descrição" value={course.description} onChange={(e) => setCourse({ ...course, description: e.target.value })} rows={3} />
+                  
+                  <div className="pt-6 border-t border-slate-700">
+                    <div className="flex justify-between items-center mb-4"><h3 className="text-lg font-bold text-white">Aulas</h3></div>
+                    <div className="space-y-4">
+                      {course.lessons.map((lesson, idx) => (
+                        <div key={lesson.id} className="group bg-slate-900/40 border border-slate-700 rounded-lg p-4 relative">
+                          <div className="absolute top-2 right-2 flex gap-2">
+                             <Button variant="danger" size="sm" onClick={() => deleteLesson(lesson.id)} className="h-7 w-7 p-0"><Trash2 size={14} /></Button>
+                          </div>
+                          <div className="flex flex-col gap-3 pr-10">
+                            <Input placeholder="Módulo (ex: Módulo 1)" value={lesson.module || ''} onChange={(e) => updateLesson(lesson.id, 'module', e.target.value)} className="bg-slate-950/50" />
+                            <Input placeholder="Título da Aula" value={lesson.title} onChange={(e) => updateLesson(lesson.id, 'title', e.target.value)} className="bg-slate-950/50 font-bold" />
+                            <div className="flex items-center gap-2">
+                               <input type="file" id={`vid-${lesson.id}`} className="hidden" accept="video/*" onChange={(e) => handleVideoFileSelect(e, lesson.id)} />
+                               <Button variant="secondary" size="sm" onClick={() => document.getElementById(`vid-${lesson.id}`)?.click()}>Arquivo Vídeo</Button>
+                               <span className="text-xs text-slate-500 truncate flex-1">{lesson.videoUrl || 'Sem vídeo'}</span>
+                            </div>
+                            <button onClick={() => setEditingExerciseLessonId(lesson.id)} className="text-indigo-400 text-sm flex items-center gap-2 hover:underline"><FileText size={14} /> Adicionar Exercícios</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Button onClick={addLesson} variant="secondary" className="w-full mt-4 border-dashed border-2 border-slate-700 bg-transparent"><Plus size={16} /> Adicionar Aula</Button>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 border-t border-slate-700 bg-slate-900/50 flex justify-end gap-3 rounded-b-2xl">
+                <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+                <Button onClick={handleSave}>Salvar Curso</Button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- APLICAÇÃO PRINCIPAL ---
+      function App() {
+        const [view, setView] = useState(() => localStorage.getItem('evp_auth_session') === 'admin' ? 'admin-dashboard' : 'home');
+        const [courses, setCourses] = useState([]);
+        const [searchTerm, setSearchTerm] = useState('');
+        const [siteConfig, setSiteConfig] = useState({ heroImage: null, defaultCourseImage: null });
+        const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+        const [loginUser, setLoginUser] = useState('');
+        const [loginPass, setLoginPass] = useState('');
+        const [editingCourse, setEditingCourse] = useState(null);
+        const [isEditorOpen, setIsEditorOpen] = useState(false);
+        const [selectedCourse, setSelectedCourse] = useState(null);
+        const [currentLesson, setCurrentLesson] = useState(null);
+        const [userAnswers, setUserAnswers] = useState({});
+        const [showResults, setShowResults] = useState({});
+        const importInputRef = useRef(null);
+
+        useEffect(() => {
+          setCourses(getCourses());
+          setSiteConfig(getSiteConfig());
+        }, []);
+
+        const refreshData = () => {
+          setCourses(getCourses());
+          setSiteConfig(getSiteConfig());
+        };
+
+        const handleLogin = (e) => {
+          e.preventDefault();
+          if (loginUser === 'adm' && loginPass === 'adm') {
+            localStorage.setItem('evp_auth_session', 'admin');
+            setView('admin-dashboard');
+            setLoginUser(''); setLoginPass('');
+          } else { alert('Credenciais inválidas.'); }
+        };
+
+        const handleLogout = () => {
+          localStorage.removeItem('evp_auth_session');
+          setView('home');
+        };
+
+        const handleExport = () => {
+          const data = localStorage.getItem(STORAGE_KEY);
+          if(!data) return;
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+          a.download = `backup_ead_${new Date().toISOString().slice(0,10)}.json`;
+          a.click();
+        };
+
+        const handleImport = (e) => {
+          const file = e.target.files[0];
+          if(!file) return;
+          if(!confirm("Isso substituirá todos os cursos atuais. Continuar?")) return;
+          const r = new FileReader();
+          r.onload = (ev) => {
+            try {
+              JSON.parse(ev.target.result);
+              localStorage.setItem(STORAGE_KEY, ev.target.result);
+              refreshData();
+              alert("Importado com sucesso!");
+            } catch(e) { alert("Arquivo inválido"); }
+          };
+          r.readAsText(file);
+          e.target.value = '';
+        };
+
+        const openPlayer = (c) => {
+          setSelectedCourse(c);
+          setCurrentLesson(c.lessons.length > 0 ? c.lessons[0] : null);
+          setUserAnswers({}); setShowResults({});
+          setView('course-player');
+        };
+
+        const handleCheckAnswer = (exId) => {
+          if (!userAnswers[exId]) return alert("Selecione uma opção");
+          setShowResults(p => ({ ...p, [exId]: true }));
+        };
+
+        const getVideoSrc = (url) => {
+          if (!url) return { type: 'none', src: '' };
+          if (url.startsWith('blob:')) return { type: 'native', src: url };
+          const m = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+          if (m && m[1]) return { type: 'youtube', src: `https://www.youtube.com/embed/${m[1]}` };
+          return { type: 'native', src: url };
+        };
+
+        const filteredCourses = courses.filter(c => c.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        // --- RENDERIZAÇÃO DAS TELAS ---
+
+        // 1. TELA INICIAL
+        if (view === 'home') return (
+          <div className="min-h-screen flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
+              <div className="flex items-center gap-2 font-bold text-xl"><div className="bg-primary p-2 rounded-lg"><MonitorPlay className="text-white" size={20}/></div> Select <span className="text-primary">EAD</span></div>
+              <div className="flex gap-3">
+                <Button variant="ghost" onClick={() => localStorage.getItem('evp_auth_session') === 'admin' ? setView('admin-dashboard') : setView('login')}>Administração</Button>
+                <Button variant="secondary" onClick={() => document.getElementById('courses').scrollIntoView({behavior:'smooth'})}>Ver Cursos</Button>
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-center pt-32 pb-20 px-4 text-center z-10">
+              <img src={siteConfig.heroImage || "https://cdn-icons-png.flaticon.com/512/3069/3069172.png"} className="w-48 h-48 mb-8 object-contain drop-shadow-2xl animate-in" />
+              <h1 className="text-5xl md:text-7xl font-extrabold mb-6">Bem-vindo ao <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">EVP</span></h1>
+              <p className="text-slate-400 text-lg max-w-2xl mb-10">Plataforma de ensino completa e offline. Seus cursos, suas regras, direto do seu computador.</p>
+              <Button size="lg" onClick={() => document.getElementById('courses').scrollIntoView({behavior:'smooth'})}>Começar Agora</Button>
+            </div>
+            <div id="courses" className="bg-surface/50 py-20 px-6 min-h-screen">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-3xl font-bold mb-10 flex items-center gap-3"><BookOpen className="text-primary"/> Cursos Disponíveis</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {courses.map(c => (
+                    <div key={c.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-primary transition-all group">
+                      <div className="h-48 overflow-hidden">
+                        <img src={c.coverImage || siteConfig.defaultCourseImage || "https://via.placeholder.com/400x300?text=Curso"} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      </div>
+                      <div className="p-6">
+                        <h3 className="font-bold text-xl mb-2">{c.title}</h3>
+                        <p className="text-slate-400 text-sm mb-4 line-clamp-2">{c.description}</p>
+                        <Button className="w-full" onClick={() => openPlayer(c)}>Acessar Curso</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+        // 2. LOGIN
+        if (view === 'login') return (
+          <div className="min-h-screen flex items-center justify-center px-4">
+            <div className="w-full max-w-md bg-surface p-8 rounded-2xl border border-slate-700 shadow-2xl">
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4"><Lock className="text-primary"/></div>
+                <h2 className="text-2xl font-bold">Área Administrativa</h2>
+              </div>
+              <form onSubmit={handleLogin} className="space-y-6">
+                <Input label="Usuário" value={loginUser} onChange={e => setLoginUser(e.target.value)} />
+                <Input label="Senha" type="password" value={loginPass} onChange={e => setLoginPass(e.target.value)} />
+                <Button type="submit" className="w-full">Entrar</Button>
+              </form>
+              <div className="mt-6 text-center"><button onClick={() => setView('home')} className="text-sm text-slate-500 hover:text-white">Voltar</button></div>
+            </div>
+          </div>
+        );
+
+        // 3. ADMIN DASHBOARD
+        if (view === 'admin-dashboard') return (
+          <div className="min-h-screen">
+            <header className="border-b border-slate-800 bg-surface/50 backdrop-blur sticky top-0 z-20 px-6 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold"><MonitorPlay className="text-primary"/> Administração</div>
+              <Button variant="ghost" size="sm" onClick={() => setView('home')}>Ir para o Site</Button>
+            </header>
+            <main className="p-6 max-w-5xl mx-auto space-y-8">
+              {/* Painel de Conta */}
+              <div className="bg-surface rounded-xl border border-slate-700 p-6 shadow-lg">
+                <h2 className="text-xl font-bold border-l-4 border-primary pl-3 mb-6">Conta</h2>
+                <div className="flex flex-col md:flex-row justify-between items-center bg-slate-900/50 p-4 rounded-lg border border-slate-800 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-slate-700 p-2 rounded-full"><User className="text-slate-300"/></div>
+                    <span>Logado como <strong>adm</strong></span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    <input type="file" ref={importInputRef} className="hidden" accept=".json" onChange={handleImport} />
+                    
+                    <Button variant="ghost" size="sm" onClick={() => setIsConfigModalOpen(true)} className="hover:bg-slate-800">
+                      <ImageIcon size={16} /> Imagens Site
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleExport} className="hover:bg-slate-800">
+                      <Download size={16} /> Backup
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => importInputRef.current.click()} className="hover:bg-slate-800">
+                      <Upload size={16} /> Restaurar
+                    </Button>
+                    <div className="w-px h-6 bg-slate-700 mx-2"></div>
+                    <Button variant="secondary" size="sm" onClick={handleLogout}>Sair</Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Cursos */}
+              <div className="bg-surface rounded-xl border border-slate-700 p-6 shadow-lg">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold border-l-4 border-emerald-500 pl-3">Cursos</h2>
+                  <div className="flex gap-2">
+                    <div className="relative"><Search className="absolute left-3 top-2.5 text-slate-500" size={16}/><input className="bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm focus:border-primary outline-none" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} /></div>
+                    <Button onClick={() => { setEditingCourse(null); setIsEditorOpen(true); }}>Adicionar Curso</Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredCourses.map(c => (
+                    <div key={c.id} className="bg-slate-900 border border-slate-800 rounded-lg p-4 flex gap-4 hover:border-slate-600 transition-colors">
+                      <div className="w-16 h-16 bg-slate-800 rounded-md shrink-0 overflow-hidden">
+                        {c.coverImage ? <img src={c.coverImage} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-600"><BookOpen /></div>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold truncate">{c.title}</h3>
+                        <p className="text-xs text-slate-400 mt-1 line-clamp-2">{c.description}</p>
+                        <div className="mt-3 flex gap-2">
+                          <button onClick={() => { setEditingCourse(c); setIsEditorOpen(true); }} className="text-xs px-3 py-1 bg-slate-800 rounded hover:bg-slate-700">Editar</button>
+                          <button onClick={() => handleDeleteCourse(c.id)} className="text-xs px-3 py-1 bg-red-900/30 text-red-400 border border-red-900/50 rounded hover:bg-red-900/50">Excluir</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </main>
+            {isEditorOpen && <CourseEditor course={editingCourse} onClose={() => setIsEditorOpen(false)} onSave={() => { setIsEditorOpen(false); refreshData(); }} />}
+            {isConfigModalOpen && <SiteConfigEditor config={siteConfig} onClose={() => setIsConfigModalOpen(false)} onSave={() => { setIsConfigModalOpen(false); refreshData(); }} />}
+          </div>
+        );
+
+        // 4. PLAYER
+        if (view === 'course-player') {
+          if (!selectedCourse) return null;
+          const vSrc = getVideoSource(currentLesson?.videoUrl);
+          return (
+            <div className="min-h-screen flex flex-col h-screen overflow-hidden">
+              <header className="h-16 border-b border-slate-800 bg-surface flex items-center px-4 shrink-0 gap-4">
+                <button onClick={() => setView('home')} className="p-2 hover:bg-slate-700 rounded-full"><ChevronLeft/></button>
+                <h1 className="font-bold text-lg hidden md:block">{selectedCourse.title}</h1>
+              </header>
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                <main className="flex-1 bg-black flex flex-col overflow-y-auto">
+                  <div className="aspect-video w-full bg-black flex items-center justify-center">
+                    {vSrc.src ? (
+                      vSrc.type === 'youtube' ? <iframe src={vSrc.src} className="w-full h-full" frameBorder="0" allowFullScreen /> : <video controls className="w-full h-full" key={vSrc.src}><source src={vSrc.src} type="video/mp4"/></video>
+                    ) : <div className="text-slate-600 flex flex-col items-center"><MonitorPlay size={48} className="mb-2"/>Selecione uma aula</div>}
+                  </div>
+                  <div className="p-8 max-w-4xl mx-auto w-full">
+                    <h2 className="text-2xl font-bold mb-8">{currentLesson?.title}</h2>
+                    {currentLesson && selectedCourse.exercises.some(e => e.lessonId === currentLesson.id) && (
+                      <div className="bg-surface border border-slate-700 rounded-xl p-6">
+                        <h3 className="font-bold mb-4 flex gap-2"><CheckCircle className="text-emerald-500"/> Exercícios de Fixação</h3>
+                        <div className="space-y-6">
+                          {selectedCourse.exercises.filter(e => e.lessonId === currentLesson.id).map((ex, idx) => (
+                            <div key={ex.id} className="bg-slate-900/50 p-4 rounded-lg">
+                              <p className="font-medium mb-3 text-slate-200"><span className="text-primary mr-2">#{idx+1}</span>{ex.statement}</p>
+                              <div className="space-y-2 ml-2">
+                                {['A','B','C','D'].map(opt => {
+                                  if(!ex[`option${opt}`]) return null;
+                                  const isSel = userAnswers[ex.id] === opt;
+                                  const show = showResults[ex.id];
+                                  const isCor = ex.correctOption === opt;
+                                  let cls = "border border-slate-700 bg-slate-800/50 hover:bg-slate-800";
+                                  if (show) {
+                                    if (isCor) cls = "border-emerald-500 bg-emerald-900/20";
+                                    else if (isSel) cls = "border-red-500 bg-red-900/20";
+                                  } else if (isSel) cls = "border-primary bg-indigo-900/30 ring-1 ring-primary";
+                                  
+                                  return (
+                                    <div key={opt} onClick={() => !show && setUserAnswers(p => ({...p, [ex.id]: opt}))} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${cls}`}>
+                                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold ${show && isCor ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-500'}`}>{opt}</div>
+                                      <span className="text-sm text-slate-300">{ex[`option${opt}`]}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="mt-4 flex justify-between items-center border-t border-slate-700/50 pt-4">
+                                <Button size="sm" variant={showResults[ex.id] ? "ghost" : "secondary"} onClick={() => handleCheckAnswer(ex.id)} disabled={showResults[ex.id]}>
+                                  {showResults[ex.id] ? (userAnswers[ex.id] === ex.correctOption ? 'Resposta Correta' : 'Resposta Incorreta') : 'Ver Resposta'}
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </main>
+                <aside className="w-full md:w-80 bg-surface border-l border-slate-800 overflow-y-auto shrink-0">
+                  <div className="p-4 border-b border-slate-700 font-bold">Conteúdo do Curso</div>
+                  <div className="divide-y divide-slate-800">
+                    {selectedCourse.lessons.map((l, idx) => (
+                      <button key={l.id} onClick={() => { setCurrentLesson(l); setUserAnswers({}); setShowResults({}); }} className={`w-full text-left p-4 flex gap-3 hover:bg-slate-700/50 ${currentLesson?.id === l.id ? 'bg-indigo-900/20 border-l-2 border-primary' : ''}`}>
+                        <div className="mt-1">{currentLesson?.id === l.id ? <PlayCircle className="text-primary" size={20}/> : <span className="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs">{idx+1}</span>}</div>
+                        <div><h4 className={`text-sm font-medium ${currentLesson?.id === l.id ? 'text-white' : 'text-slate-400'}`}>{l.title}</h4></div>
+                      </button>
+                    ))}
+                  </div>
+                </aside>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
 </body>
 </html>
