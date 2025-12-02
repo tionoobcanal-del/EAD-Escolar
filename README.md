@@ -4,13 +4,15 @@
 
 
 # EAD-Escolar
-criação de um EAD simples para uso localhost
+criação de um EAD simples para uso localhost pelo App XAMP e também Online.
 
 ## Run and deploy your AI Studio app
 
 This contains everything you need to run your app locally.
 
 View your app in AI Studio:  https://ai.studio/apps/drive/1qS9zCd5hMHPVf4S-vXJJ-PRMUNPa9rLC
+View your app on GitHub Pages: https://ead-escolar.github.io/EAD-Escolar/
+View your app on Vercel: https://ead-escolar.vercel.app/
 
 ## Run Locally
 
